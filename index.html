@@ -1,0 +1,2001 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Metflix - Watch TV Shows Online, Watch Movies Online</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Bebas+Neue&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                red: "#E50914",
+                hoverRed: "#B20710",
+                dark: "#141414",
+                surface: "#181818",
+                card: "#242424",
+                subtext: "#808080",
+              },
+            },
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+              display: ['"Bebas Neue"', "Impact", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        height: 8px;
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #141414;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+
+      /* Hide scrollbars for row carousels */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      /* Billboard Vignette Gradients */
+      .billboard-vignette {
+        background: linear-gradient(
+          77deg,
+          rgba(0, 0, 0, 0.8) 0%,
+          rgba(0, 0, 0, 0) 85%
+        );
+      }
+      .billboard-bottom-fade {
+        background: linear-gradient(
+          180deg,
+          transparent 0%,
+          rgba(20, 20, 20, 0.6) 60%,
+          #141414 100%
+        );
+      }
+
+      /* Outline Numbers for Top 10 */
+      .stroke-number {
+        -webkit-text-stroke: 4px #595959;
+        color: #141414;
+        font-family: "Impact", "Bebas Neue", sans-serif;
+        line-height: 0.8;
+        user-select: none;
+      }
+
+      /* Card Glow and Hover Transitions */
+      .card-transition {
+        transition:
+          transform 0.35s cubic-bezier(0.2, 0, 0, 1),
+          box-shadow 0.35s ease;
+      }
+
+      /* Subtle shimmer for trailer player */
+      @keyframes pulse-subtle {
+        0%,
+        100% {
+          opacity: 0.95;
+        }
+        50% {
+          opacity: 0.8;
+        }
+      }
+      .animate-shimmer {
+        animation: pulse-subtle 4s infinite ease-in-out;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-[#141414] text-white font-sans antialiased selection:bg-brand-red selection:text-white overflow-x-hidden min-h-screen flex flex-col justify-between"
+  >
+    <!-- ==================== HEADER / NAVBAR ==================== -->
+    <header
+      id="navbar"
+      class="fixed top-0 w-full z-40 transition-colors duration-500 py-3 sm:py-4 px-4 sm:px-8 lg:px-14 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent"
+    >
+      <div class="flex items-center space-x-4 md:space-x-8">
+        <!-- Logo -->
+        <a
+          href="#"
+          onclick="
+            filterByCategory('all');
+            return false;
+          "
+          class="flex items-center space-x-1 group"
+        >
+          <span
+            class="text-brand-red font-black text-2xl sm:text-3xl lg:text-4xl tracking-tighter uppercase font-display select-none transition-transform group-hover:scale-105"
+            >METFLIX</span
+          >
+        </a>
+
+        <!-- Primary Nav Links -->
+        <nav
+          class="hidden md:flex items-center space-x-5 text-sm text-gray-300 font-medium"
+        >
+          <button
+            onclick="filterByCategory('all')"
+            id="nav-home"
+            class="nav-link text-white font-semibold hover:text-white transition-colors"
+          >
+            Home
+          </button>
+          <button
+            onclick="filterByCategory('series')"
+            id="nav-series"
+            class="nav-link hover:text-white transition-colors"
+          >
+            TV Shows
+          </button>
+          <button
+            onclick="filterByCategory('movie')"
+            id="nav-movie"
+            class="nav-link hover:text-white transition-colors"
+          >
+            Movies
+          </button>
+          <button
+            onclick="filterByCategory('trending')"
+            id="nav-trending"
+            class="nav-link hover:text-white transition-colors"
+          >
+            New & Popular
+          </button>
+          <button
+            onclick="showMyListView()"
+            id="nav-mylist"
+            class="nav-link hover:text-white transition-colors flex items-center gap-1.5"
+          >
+            <span>My List</span>
+            <span
+              id="nav-list-badge"
+              class="hidden px-1.5 py-0.2 text-[10px] bg-brand-red text-white font-bold rounded-full"
+              >0</span
+            >
+          </button>
+        </nav>
+      </div>
+
+      <!-- Secondary Utilities -->
+      <div class="flex items-center space-x-3 sm:space-x-5">
+        <!-- Search Input Container -->
+        <div id="search-container" class="relative flex items-center">
+          <button
+            id="search-toggle-btn"
+            class="p-1.5 rounded-full hover:bg-white/10 text-gray-200 transition-colors"
+          >
+            <i data-lucide="search" class="w-5 h-5"></i>
+          </button>
+          <div
+            id="search-box"
+            class="hidden items-center bg-black/80 border border-gray-700/80 rounded px-2.5 py-1 text-sm transition-all duration-300 w-48 sm:w-64 ml-2"
+          >
+            <i
+              data-lucide="search"
+              class="w-4 h-4 text-gray-400 mr-2 shrink-0"
+            ></i>
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Titles, genres, cast..."
+              class="bg-transparent border-none text-white focus:outline-none w-full text-xs sm:text-sm placeholder-gray-500"
+            />
+            <button
+              id="search-clear-btn"
+              class="text-gray-400 hover:text-white ml-1 hidden"
+            >
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="relative">
+          <button
+            id="notif-btn"
+            class="p-1.5 rounded-full hover:bg-white/10 text-gray-200 transition-colors relative"
+          >
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span
+              class="absolute top-1 right-1 w-2 h-2 bg-brand-red rounded-full"
+            ></span>
+          </button>
+          <!-- Notification Dropdown -->
+          <div
+            id="notif-dropdown"
+            class="hidden absolute right-0 mt-3 w-72 bg-[#181818]/95 border border-zinc-700 rounded-md shadow-2xl p-3 z-50 text-xs space-y-3 backdrop-blur-md"
+          >
+            <div class="font-bold text-gray-200 border-b border-zinc-700 pb-2">
+              Notifications
+            </div>
+            <div
+              class="flex gap-3 items-center hover:bg-white/5 p-1 rounded cursor-pointer transition"
+            >
+              <img
+                src="https://images.unsplash.com/photo-1578632767115-351597cf2477?w=100&auto=format&fit=crop&q=60"
+                class="w-12 h-8 rounded object-cover"
+              />
+              <div>
+                <p class="font-semibold text-white">Cyber Odyssey Season 2</p>
+                <p class="text-gray-400 text-[11px]">
+                  Now streaming global release
+                </p>
+              </div>
+            </div>
+            <div
+              class="flex gap-3 items-center hover:bg-white/5 p-1 rounded cursor-pointer transition"
+            >
+              <img
+                src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=100&auto=format&fit=crop&q=60"
+                class="w-12 h-8 rounded object-cover"
+              />
+              <div>
+                <p class="font-semibold text-white">Neon Drift</p>
+                <p class="text-gray-400 text-[11px]">
+                  Trending in Action movies
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Profile Dropdown -->
+        <div class="relative group">
+          <div class="flex items-center space-x-2 cursor-pointer py-1">
+            <div
+              class="w-7 h-7 sm:w-8 sm:h-8 rounded bg-gradient-to-tr from-brand-red to-amber-600 flex items-center justify-center font-bold text-xs shadow-md border border-white/20"
+            >
+              M
+            </div>
+            <i
+              data-lucide="chevron-down"
+              class="w-3.5 h-3.5 text-gray-300 transition-transform group-hover:rotate-180"
+            ></i>
+          </div>
+
+          <div
+            class="absolute right-0 mt-2 w-52 bg-[#181818] border border-zinc-700/80 rounded-md shadow-2xl py-2 hidden group-hover:block transition-all z-50"
+          >
+            <div class="px-4 py-2 border-b border-zinc-800 text-xs">
+              <p class="text-white font-medium">Logged in as</p>
+              <p class="text-gray-400 truncate">metflix_member@demo.com</p>
+            </div>
+            <a
+              href="#"
+              onclick="
+                showMyListView();
+                return false;
+              "
+              class="px-4 py-2 text-xs text-gray-200 hover:bg-zinc-800 flex items-center gap-2"
+            >
+              <i data-lucide="bookmark" class="w-4 h-4 text-brand-red"></i> My
+              Watchlist
+            </a>
+            <a
+              href="#"
+              onclick="
+                showToast('Profile management is disabled in demo mode.');
+                return false;
+              "
+              class="px-4 py-2 text-xs text-gray-200 hover:bg-zinc-800 flex items-center gap-2"
+            >
+              <i data-lucide="user" class="w-4 h-4"></i> Account Settings
+            </a>
+            <a
+              href="#"
+              onclick="
+                showToast('Help Center opened');
+                return false;
+              "
+              class="px-4 py-2 text-xs text-gray-200 hover:bg-zinc-800 flex items-center gap-2"
+            >
+              <i data-lucide="help-circle" class="w-4 h-4"></i> Help Center
+            </a>
+            <div class="border-t border-zinc-800 my-1"></div>
+            <button
+              onclick="showToast('Signed out of Metflix session demo.')"
+              class="w-full text-left px-4 py-2 text-xs text-red-400 hover:bg-zinc-800 flex items-center gap-2"
+            >
+              <i data-lucide="log-out" class="w-4 h-4"></i> Sign Out of Metflix
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="flex-grow pb-16">
+      <!-- SEARCH / FILTER ACTIVE STATE BANNER -->
+      <section
+        id="search-results-section"
+        class="hidden px-4 sm:px-8 lg:px-14 pt-24 pb-8"
+      >
+        <div
+          class="flex items-center justify-between mb-6 border-b border-zinc-800 pb-4"
+        >
+          <div>
+            <h2
+              class="text-xl sm:text-2xl font-bold text-white flex items-center gap-2"
+            >
+              <span id="search-heading">Results</span>
+              <span
+                id="search-count-badge"
+                class="text-xs bg-zinc-800 text-gray-300 px-2 py-0.5 rounded-full"
+                >0</span
+              >
+            </h2>
+            <p id="search-subtext" class="text-xs text-gray-400 mt-1">
+              Found movies and series matching your inquiry
+            </p>
+          </div>
+          <button
+            onclick="resetSearch()"
+            class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-xs rounded text-gray-200 transition"
+          >
+            Clear Search
+          </button>
+        </div>
+        <div
+          id="search-grid"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4"
+        >
+          <!-- Dynamic search cards injected here -->
+        </div>
+      </section>
+
+      <!-- BILLBOARD HERO BANNER -->
+      <section
+        id="hero-billboard"
+        class="relative h-[78vh] sm:h-[84vh] lg:h-[90vh] w-full overflow-hidden select-none"
+      >
+        <!-- Background Visual with Dynamic Crossfade -->
+        <div class="absolute inset-0">
+          <img
+            id="hero-backdrop"
+            src="https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1920&auto=format&fit=crop&q=80"
+            alt="Featured Billboard"
+            class="w-full h-full object-cover object-center filter brightness-90 transform scale-105 duration-1000 ease-out"
+          />
+          <!-- Vignettes for Netflix Depth -->
+          <div class="absolute inset-0 billboard-vignette"></div>
+          <div class="absolute inset-0 billboard-bottom-fade"></div>
+        </div>
+
+        <!-- Hero Information Content -->
+        <div
+          class="absolute bottom-16 sm:bottom-24 px-4 sm:px-8 lg:px-14 max-w-2xl z-20 space-y-3 sm:space-y-4"
+        >
+          <!-- Badging -->
+          <div class="flex items-center space-x-2 text-xs font-semibold">
+            <span
+              class="bg-brand-red text-white px-2 py-0.5 rounded tracking-wider uppercase font-bold text-[10px]"
+              >Metflix Original</span
+            >
+            <span class="flex items-center text-amber-400 gap-1 font-bold">
+              <i data-lucide="flame" class="w-3.5 h-3.5 fill-current"></i> #1 in
+              Movies Today
+            </span>
+            <span
+              class="border border-gray-500 text-gray-300 px-1.5 py-0.2 text-[10px] rounded"
+              >4K ULTRA HD</span
+            >
+            <span
+              class="border border-gray-500 text-gray-300 px-1.5 py-0.2 text-[10px] rounded"
+              >5.1 AUDIO</span
+            >
+          </div>
+
+          <!-- Title -->
+          <h1
+            id="hero-title"
+            class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white drop-shadow-md leading-none"
+          >
+            CYBER ODYSSEY 2099
+          </h1>
+
+          <!-- Meta tags -->
+          <div
+            class="flex items-center space-x-3 text-xs sm:text-sm text-gray-300"
+          >
+            <span class="text-green-400 font-bold">98% Match</span>
+            <span class="border border-gray-600 px-1 text-[11px]">TV-MA</span>
+            <span>8 Episodes</span>
+            <span class="text-gray-400">• Sci-Fi • Cyberpunk • Thriller</span>
+          </div>
+
+          <!-- Synopsis -->
+          <p
+            id="hero-desc"
+            class="text-xs sm:text-sm md:text-base text-gray-200 line-clamp-3 leading-relaxed drop-shadow max-w-xl"
+          >
+            In a hyper-mechanized dystopian metropolis, a rogue synthetic
+            enforcer and a cybernetic hacker uncover a classified
+            consciousness-harvesting protocol that threatens the remnants of
+            humanity.
+          </p>
+
+          <!-- CTAs -->
+          <div class="flex items-center space-x-3 pt-2">
+            <button
+              id="hero-play-btn"
+              onclick="playHeroTrailer()"
+              class="flex items-center space-x-2 bg-white text-black font-bold px-5 sm:px-7 py-2 sm:py-2.5 rounded hover:bg-white/80 transition-all shadow-lg text-sm sm:text-base transform active:scale-95"
+            >
+              <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+              <span>Play</span>
+            </button>
+            <button
+              id="hero-info-btn"
+              onclick="openHeroDetails()"
+              class="flex items-center space-x-2 bg-zinc-600/80 hover:bg-zinc-600 text-white font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded transition-all backdrop-blur-sm text-sm sm:text-base transform active:scale-95"
+            >
+              <i data-lucide="info" class="w-5 h-5"></i>
+              <span>More Info</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Sound/Rating Badge -->
+        <div
+          class="absolute right-4 sm:right-14 bottom-20 sm:bottom-28 hidden sm:flex items-center space-x-3 z-20"
+        >
+          <button
+            id="hero-audio-btn"
+            onclick="toggleHeroAudio()"
+            class="w-10 h-10 rounded-full border border-gray-400/60 bg-black/40 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition text-gray-200"
+          >
+            <i id="hero-audio-icon" data-lucide="volume-2" class="w-5 h-5"></i>
+          </button>
+          <div
+            class="border-l-2 border-brand-red bg-black/50 px-3 py-1 text-xs font-semibold backdrop-blur-md tracking-wider"
+          >
+            PG-13 • HDR
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTENT ROWS CONTAINER -->
+      <div
+        id="content-shelves"
+        class="relative z-30 -mt-10 sm:-mt-16 space-y-8 sm:space-y-12 px-4 sm:px-8 lg:px-14"
+      >
+        <!-- ROW 1: MY LIST (Conditional Display) -->
+        <section id="row-my-list" class="hidden">
+          <div class="flex items-center justify-between mb-2">
+            <h2
+              class="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2"
+            >
+              <span>My Watchlist</span>
+              <span
+                class="text-xs font-normal text-brand-red bg-brand-red/10 px-2 py-0.5 rounded-full border border-brand-red/20"
+                >Saved</span
+              >
+            </h2>
+          </div>
+          <div class="relative group/shelf">
+            <button
+              onclick="scrollRow('list-carousel', -1)"
+              class="absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-black/70 hover:bg-black/90 text-white h-28 w-10 sm:w-12 rounded-r flex items-center justify-center opacity-0 group-hover/shelf:opacity-100 transition-opacity"
+            >
+              <i data-lucide="chevron-left" class="w-6 h-6"></i>
+            </button>
+            <div
+              id="list-carousel"
+              class="flex space-x-3 sm:space-x-4 overflow-x-auto no-scrollbar scroll-smooth py-4 px-1"
+            >
+              <!-- Dynamic elements appended here -->
+            </div>
+            <button
+              onclick="scrollRow('list-carousel', 1)"
+              class="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-black/70 hover:bg-black/90 text-white h-28 w-10 sm:w-12 rounded-l flex items-center justify-center opacity-0 group-hover/shelf:opacity-100 transition-opacity"
+            >
+              <i data-lucide="chevron-right" class="w-6 h-6"></i>
+            </button>
+          </div>
+        </section>
+
+        <!-- ROW 2: TRENDING NOW (Standard Cards) -->
+        <section>
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-lg sm:text-xl font-bold tracking-tight text-white">
+              Trending Now
+            </h2>
+            <span
+              class="text-xs text-gray-400 hover:text-white cursor-pointer transition"
+              >Explore All</span
+            >
+          </div>
+          <div class="relative group/shelf">
+            <button
+              onclick="scrollRow('trending-carousel', -1)"
+              class="absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-black/70 hover:bg-black/90 text-white h-24 sm:h-28 w-9 sm:w-11 rounded-r flex items-center justify-center opacity-0 group-hover/shelf:opacity-100 transition-opacity"
+            >
+              <i data-lucide="chevron-left" class="w-6 h-6"></i>
+            </button>
+            <div
+              id="trending-carousel"
+              class="flex space-x-2.5 sm:space-x-3.5 overflow-x-auto no-scrollbar scroll-smooth py-3 px-1"
+            >
+              <!-- Rendered by JS -->
+            </div>
+            <button
+              onclick="scrollRow('trending-carousel', 1)"
+              class="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-black/70 hover:bg-black/90 text-white h-24 sm:h-28 w-9 sm:w-11 rounded-l flex items-center justify-center opacity-0 group-hover/shelf:opacity-100 transition-opacity"
+            >
+              <i data-lucide="chevron-right" class="w-6 h-6"></i>
+            </button>
+          </div>
+        </section>
+
+        <!-- ROW 3: TOP 10 TODAY (Numbered Badges) -->
+        <section>
+          <div class="flex items-center justify-between mb-2">
+            <h2
+              class="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2"
+            >
+              <span>Top 10 Movies & Shows Today</span>
+            </h2>
+          </div>
+          <div class="relative group/shelf">
+            <button
+              onclick="scrollRow('top10-carousel', -1)"
+              class="absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-black/70 hover:bg-black/90 text-white h-32 sm:h-36 w-9 sm:w-11 rounded-r flex items-center justify-center opacity-0 group-hover/shelf:opacity-100 transition-opacity"
+            >
+              <i data-lucide="chevron-left" class="w-6 h-6"></i>
+            </button>
+            <div
+              id="top10-carousel"
+              class="flex space-x-3 sm:space-x-5 overflow-x-auto no-scrollbar scroll-smooth py-3 px-2"
+            >
+              <!-- Rendered by JS with giant numbers -->
+            </div>
+            <button
+              onclick="scrollRow('top10-carousel', 1)"
+              class="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-black/70 hover:bg-black/90 text-white h-32 sm:h-36 w-9 sm:w-11 rounded-l flex items-center justify-center opacity-0 group-hover/shelf:opacity-100 transition-opacity"
+            >
+              <i data-lucide="chevron-right" class="w-6 h-6"></i>
+            </button>
+          </div>
+        </section>
+
+        <!-- ROW 4: METFLIX ORIGINALS (Tall Posters) -->
+        <section>
+          <div class="flex items-center justify-between mb-2">
+            <h2
+              class="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2"
+            >
+              <span class="text-brand-red font-black">M</span>
+              <span>Metflix Originals</span>
+            </h2>
+            <span
+              class="text-xs text-gray-400 hover:text-white cursor-pointer transition"
+              >Exclusive</span
+            >
+          </div>
+          <div class="relative group/shelf">
+            <button
+              onclick="scrollRow('originals-carousel', -1)"
+              class="absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-black/70 hover:bg-black/90 text-white h-48 sm:h-60 w-9 sm:w-11 rounded-r flex items-center justify-center opacity-0 group-hover/shelf:opacity-100 transition-opacity"
+            >
+              <i data-lucide="chevron-left" class="w-6 h-6"></i>
+            </button>
+            <div
+              id="originals-carousel"
+              class="flex space-x-3 sm:space-x-4 overflow-x-auto no-scrollbar scroll-smooth py-3 px-1"
+            >
+              <!-- Rendered by JS -->
+            </div>
+            <button
+              onclick="scrollRow('originals-carousel', 1)"
+              class="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-black/70 hover:bg-black/90 text-white h-48 sm:h-60 w-9 sm:w-11 rounded-l flex items-center justify-center opacity-0 group-hover/shelf:opacity-100 transition-opacity"
+            >
+              <i data-lucide="chevron-right" class="w-6 h-6"></i>
+            </button>
+          </div>
+        </section>
+
+        <!-- ROW 5: ACTION & ADVENTURE -->
+        <section>
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-lg sm:text-xl font-bold tracking-tight text-white">
+              Action & High-Octane Thrillers
+            </h2>
+          </div>
+          <div class="relative group/shelf">
+            <button
+              onclick="scrollRow('action-carousel', -1)"
+              class="absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-black/70 hover:bg-black/90 text-white h-24 sm:h-28 w-9 sm:w-11 rounded-r flex items-center justify-center opacity-0 group-hover/shelf:opacity-100 transition-opacity"
+            >
+              <i data-lucide="chevron-left" class="w-6 h-6"></i>
+            </button>
+            <div
+              id="action-carousel"
+              class="flex space-x-2.5 sm:space-x-3.5 overflow-x-auto no-scrollbar scroll-smooth py-3 px-1"
+            >
+              <!-- Rendered by JS -->
+            </div>
+            <button
+              onclick="scrollRow('action-carousel', 1)"
+              class="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-black/70 hover:bg-black/90 text-white h-24 sm:h-28 w-9 sm:w-11 rounded-l flex items-center justify-center opacity-0 group-hover/shelf:opacity-100 transition-opacity"
+            >
+              <i data-lucide="chevron-right" class="w-6 h-6"></i>
+            </button>
+          </div>
+        </section>
+
+        <!-- ROW 6: SCI-FI & FANTASY -->
+        <section>
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-lg sm:text-xl font-bold tracking-tight text-white">
+              Sci-Fi Realities & Space Exploration
+            </h2>
+          </div>
+          <div class="relative group/shelf">
+            <button
+              onclick="scrollRow('scifi-carousel', -1)"
+              class="absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-black/70 hover:bg-black/90 text-white h-24 sm:h-28 w-9 sm:w-11 rounded-r flex items-center justify-center opacity-0 group-hover/shelf:opacity-100 transition-opacity"
+            >
+              <i data-lucide="chevron-left" class="w-6 h-6"></i>
+            </button>
+            <div
+              id="scifi-carousel"
+              class="flex space-x-2.5 sm:space-x-3.5 overflow-x-auto no-scrollbar scroll-smooth py-3 px-1"
+            >
+              <!-- Rendered by JS -->
+            </div>
+            <button
+              onclick="scrollRow('scifi-carousel', 1)"
+              class="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-black/70 hover:bg-black/90 text-white h-24 sm:h-28 w-9 sm:w-11 rounded-l flex items-center justify-center opacity-0 group-hover/shelf:opacity-100 transition-opacity"
+            >
+              <i data-lucide="chevron-right" class="w-6 h-6"></i>
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- ==================== DETAILS & PLAYER MODAL ==================== -->
+    <div
+      id="modal-container"
+      class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-6 overflow-y-auto"
+    >
+      <div
+        id="modal-backdrop"
+        onclick="closeModal()"
+        class="fixed inset-0"
+      ></div>
+
+      <div
+        id="modal-content"
+        class="relative w-full max-w-4xl bg-[#181818] rounded-xl shadow-2xl overflow-hidden z-10 border border-zinc-800 my-auto transform transition-all duration-300 scale-95 opacity-0"
+      >
+        <!-- Close Button -->
+        <button
+          onclick="closeModal()"
+          class="absolute top-4 right-4 z-30 w-9 h-9 rounded-full bg-[#181818]/80 text-white hover:bg-zinc-700 flex items-center justify-center transition border border-white/20"
+        >
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+
+        <!-- Video Simulator Banner -->
+        <div
+          class="relative h-64 sm:h-96 w-full bg-black overflow-hidden group"
+        >
+          <img
+            id="modal-backdrop-img"
+            src=""
+            alt="Backdrop"
+            class="w-full h-full object-cover filter brightness-90 animate-shimmer"
+          />
+          <div
+            class="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-black/30"
+          ></div>
+
+          <!-- Player Overlay Controls Simulator -->
+          <div
+            class="absolute bottom-6 left-6 right-6 flex items-center justify-between"
+          >
+            <div class="flex items-center space-x-3">
+              <button
+                onclick="simulatePlayTrailer()"
+                class="bg-white hover:bg-white/90 text-black px-6 py-2 rounded font-bold flex items-center space-x-2 text-sm transition"
+              >
+                <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+                <span id="modal-play-btn-text">Play Trailer</span>
+              </button>
+              <button
+                id="modal-list-toggle-btn"
+                class="w-10 h-10 rounded-full border-2 border-gray-400 bg-black/50 text-white flex items-center justify-center hover:border-white transition"
+              >
+                <i data-lucide="plus" class="w-5 h-5"></i>
+              </button>
+              <button
+                onclick="toggleModalLike()"
+                id="modal-like-btn"
+                class="w-10 h-10 rounded-full border-2 border-gray-400 bg-black/50 text-white flex items-center justify-center hover:border-white transition"
+              >
+                <i data-lucide="thumbs-up" class="w-5 h-5"></i>
+              </button>
+            </div>
+            <button
+              onclick="toggleModalMute()"
+              id="modal-mute-btn"
+              class="w-10 h-10 rounded-full border-2 border-gray-400 bg-black/50 text-white flex items-center justify-center hover:border-white transition"
+            >
+              <i
+                id="modal-mute-icon"
+                data-lucide="volume-2"
+                class="w-5 h-5"
+              ></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Detail Info Body -->
+        <div class="p-6 sm:p-8 space-y-6">
+          <!-- Headline & Specs -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="md:col-span-2 space-y-3">
+              <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+                <span id="modal-match" class="text-green-400 font-bold"
+                  >98% Match</span
+                >
+                <span id="modal-year" class="text-gray-300">2024</span>
+                <span
+                  id="modal-rating"
+                  class="border border-gray-600 px-1.5 py-0.2 text-[10px] text-gray-300 font-medium"
+                  >TV-MA</span
+                >
+                <span id="modal-duration" class="text-gray-300">2h 15m</span>
+                <span
+                  class="bg-zinc-800 text-gray-300 px-1.5 py-0.2 text-[10px] rounded border border-zinc-700"
+                  >Ultra HD 4K</span
+                >
+              </div>
+
+              <h2
+                id="modal-title"
+                class="text-2xl sm:text-3xl font-black text-white"
+              >
+                Title Here
+              </h2>
+              <p
+                id="modal-overview"
+                class="text-sm text-gray-300 leading-relaxed"
+              ></p>
+            </div>
+
+            <!-- Metadata Sidebar -->
+            <div
+              class="text-xs space-y-2 border-t md:border-t-0 md:border-l border-zinc-800 pt-4 md:pt-0 md:pl-6 text-gray-400"
+            >
+              <div>
+                <span class="text-gray-500">Cast:</span>
+                <span id="modal-cast" class="text-gray-300"
+                  >Elena Rostova, Jax Vance, Marcus Thorne</span
+                >
+              </div>
+              <div>
+                <span class="text-gray-500">Genres:</span>
+                <span id="modal-genres" class="text-gray-300"
+                  >Action, Sci-Fi, Thriller</span
+                >
+              </div>
+              <div>
+                <span class="text-gray-500">Maturity Rating:</span>
+                <span class="text-gray-300"
+                  >Recommended for ages 16 and up</span
+                >
+              </div>
+              <div>
+                <span class="text-gray-500">Audio:</span>
+                <span class="text-gray-300"
+                  >English - Audio Description, Dolby Atmos</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Simulated Episodes Section -->
+          <div class="border-t border-zinc-800 pt-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold text-white">Episodes & Chapters</h3>
+              <span class="text-xs text-gray-400">Season 1</span>
+            </div>
+
+            <div id="modal-episodes-list" class="space-y-3">
+              <!-- Simulated Episode Row 1 -->
+              <div
+                class="flex items-center p-3 rounded-lg bg-zinc-900/60 hover:bg-zinc-800/80 transition cursor-pointer group"
+              >
+                <span
+                  class="text-base font-bold text-gray-500 group-hover:text-white w-6"
+                  >1</span
+                >
+                <div
+                  class="w-24 h-14 bg-zinc-800 rounded overflow-hidden mr-4 relative shrink-0"
+                >
+                  <img
+                    src="https://images.unsplash.com/photo-1578632767115-351597cf2477?w=200&auto=format&fit=crop&q=60"
+                    class="w-full h-full object-cover"
+                  />
+                  <div
+                    class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition"
+                  >
+                    <i
+                      data-lucide="play"
+                      class="w-4 h-4 fill-white text-white"
+                    ></i>
+                  </div>
+                </div>
+                <div class="flex-grow">
+                  <div
+                    class="flex justify-between text-xs font-semibold text-white"
+                  >
+                    <span>Pilot: Awakening</span>
+                    <span class="text-gray-400">54m</span>
+                  </div>
+                  <p class="text-[11px] text-gray-400 line-clamp-1 mt-1">
+                    An elite agent awakens with erased memories in the
+                    low-sectors.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Simulated Episode Row 2 -->
+              <div
+                class="flex items-center p-3 rounded-lg bg-zinc-900/60 hover:bg-zinc-800/80 transition cursor-pointer group"
+              >
+                <span
+                  class="text-base font-bold text-gray-500 group-hover:text-white w-6"
+                  >2</span
+                >
+                <div
+                  class="w-24 h-14 bg-zinc-800 rounded overflow-hidden mr-4 relative shrink-0"
+                >
+                  <img
+                    src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=200&auto=format&fit=crop&q=60"
+                    class="w-full h-full object-cover"
+                  />
+                  <div
+                    class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition"
+                  >
+                    <i
+                      data-lucide="play"
+                      class="w-4 h-4 fill-white text-white"
+                    ></i>
+                  </div>
+                </div>
+                <div class="flex-grow">
+                  <div
+                    class="flex justify-between text-xs font-semibold text-white"
+                  >
+                    <span>Ghost in the Circuit</span>
+                    <span class="text-gray-400">48m</span>
+                  </div>
+                  <p class="text-[11px] text-gray-400 line-clamp-1 mt-1">
+                    Pursued by bounty hunters, our team infiltrates an
+                    underground data bank.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- More Like This Grid -->
+          <div class="border-t border-zinc-800 pt-6">
+            <h3 class="text-lg font-bold text-white mb-4">More Like This</h3>
+            <div
+              id="modal-similar-grid"
+              class="grid grid-cols-2 sm:grid-cols-3 gap-3"
+            >
+              <!-- Injected by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div
+      id="toast"
+      class="fixed bottom-6 right-6 z-50 bg-brand-surface text-white px-4 py-3 rounded-md shadow-2xl border border-zinc-700 flex items-center space-x-3 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none"
+    >
+      <div id="toast-icon-wrapper" class="text-brand-red">
+        <i data-lucide="check-circle" class="w-5 h-5"></i>
+      </div>
+      <span id="toast-message" class="text-xs sm:text-sm font-medium"
+        >Notification triggered</span
+      >
+    </div>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer
+      class="bg-[#101010] border-t border-zinc-900 text-gray-500 text-xs py-10 px-4 sm:px-8 lg:px-14"
+    >
+      <div class="max-w-6xl mx-auto space-y-6">
+        <!-- Social icons -->
+        <div class="flex space-x-6 text-gray-400">
+          <a href="#" class="hover:text-white transition"
+            ><i data-lucide="facebook" class="w-5 h-5"></i
+          ></a>
+          <a href="#" class="hover:text-white transition"
+            ><i data-lucide="instagram" class="w-5 h-5"></i
+          ></a>
+          <a href="#" class="hover:text-white transition"
+            ><i data-lucide="twitter" class="w-5 h-5"></i
+          ></a>
+          <a href="#" class="hover:text-white transition"
+            ><i data-lucide="youtube" class="w-5 h-5"></i
+          ></a>
+        </div>
+
+        <!-- Links Column Grid -->
+        <div
+          class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-zinc-400 text-xs"
+        >
+          <ul class="space-y-2.5">
+            <li>
+              <a
+                href="#"
+                onclick="
+                  showToast('Audio & Subtitles preferences');
+                  return false;
+                "
+                class="hover:underline"
+                >Audio Description</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                onclick="
+                  showToast('Investor relations portal');
+                  return false;
+                "
+                class="hover:underline"
+                >Investor Relations</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                onclick="
+                  showToast('Legal Notices');
+                  return false;
+                "
+                class="hover:underline"
+                >Legal Notices</a
+              >
+            </li>
+          </ul>
+          <ul class="space-y-2.5">
+            <li>
+              <a
+                href="#"
+                onclick="
+                  showToast('Help Center available 24/7');
+                  return false;
+                "
+                class="hover:underline"
+                >Help Center</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                onclick="
+                  showToast('Job Openings in Metflix Engineering');
+                  return false;
+                "
+                class="hover:underline"
+                >Jobs</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                onclick="
+                  showToast('Cookie preferences updated');
+                  return false;
+                "
+                class="hover:underline"
+                >Cookie Preferences</a
+              >
+            </li>
+          </ul>
+          <ul class="space-y-2.5">
+            <li>
+              <a
+                href="#"
+                onclick="
+                  showToast('Gift Cards store');
+                  return false;
+                "
+                class="hover:underline"
+                >Gift Cards</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                onclick="
+                  showToast('Terms of Use');
+                  return false;
+                "
+                class="hover:underline"
+                >Terms of Use</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                onclick="
+                  showToast('Corporate info');
+                  return false;
+                "
+                class="hover:underline"
+                >Corporate Information</a
+              >
+            </li>
+          </ul>
+          <ul class="space-y-2.5">
+            <li>
+              <a
+                href="#"
+                onclick="
+                  showToast('Media Centre press kits');
+                  return false;
+                "
+                class="hover:underline"
+                >Media Centre</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                onclick="
+                  showToast('Privacy Policy');
+                  return false;
+                "
+                class="hover:underline"
+                >Privacy</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                onclick="
+                  showToast('Contact Us directly');
+                  return false;
+                "
+                class="hover:underline"
+                >Contact Us</a
+              >
+            </li>
+          </ul>
+        </div>
+
+        <!-- Language selector simulator -->
+        <div class="pt-2">
+          <button
+            class="border border-zinc-700 bg-transparent text-zinc-300 px-3 py-1.5 rounded text-xs flex items-center space-x-2 hover:border-zinc-500"
+          >
+            <i data-lucide="globe" class="w-4 h-4"></i>
+            <span>English</span>
+          </button>
+        </div>
+
+        <!-- Disclaimer & Copyright -->
+        <div class="text-[11px] text-zinc-600 pt-2 space-y-1">
+          <p>
+            © 2026 Metflix UI Showcase - Built with HTML, Tailwind CSS &
+            JavaScript for portfolio & demonstration purposes.
+          </p>
+          <p>
+            This clone does not stream actual copyrighted video and uses
+            high-definition open media attribution.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- ==================== LOGIC / SCRIPT ==================== -->
+    <script>
+      /* ========================================================
+       DATA STORE: RICH MOVIE & SHOW CATALOG
+    ======================================================== */
+      const MOVIES_DATABASE = [
+        {
+          id: "m1",
+          title: "Cyber Odyssey 2099",
+          type: "series",
+          backdrop:
+            "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1280&auto=format&fit=crop&q=80",
+          poster:
+            "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80",
+          match: 99,
+          rating: "TV-MA",
+          duration: "2 Seasons",
+          genres: ["Sci-Fi", "Cyberpunk", "Action"],
+          overview:
+            "In a neon-drenched futuristic metropolis, a renegade synthetic hunter uncovers an existential corporate conspiracy connecting neural grids with human souls.",
+          cast: ["Elena Rostova", "Jax Vance", "Marcus Thorne"],
+          isOriginal: true,
+          trending: true,
+          top10: 1,
+          featured: true,
+        },
+        {
+          id: "m2",
+          title: "Neon Drift: Tokyo Highway",
+          type: "movie",
+          backdrop:
+            "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1280&auto=format&fit=crop&q=80",
+          poster:
+            "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80",
+          match: 97,
+          rating: "PG-13",
+          duration: "2h 08m",
+          genres: ["Action", "Crime", "Speed"],
+          overview:
+            "An underground street racer in Neo-Tokyo gets trapped between rival yakuza syndicates and high-tech federal agents pursuing prototype engines.",
+          cast: ["Kenji Sato", "Maya Lin", "David Ross"],
+          isOriginal: false,
+          trending: true,
+          top10: 2,
+        },
+        {
+          id: "m3",
+          title: "Abyssal Horizon",
+          type: "movie",
+          backdrop:
+            "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=80",
+          poster:
+            "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80",
+          match: 95,
+          rating: "PG-13",
+          duration: "1h 54m",
+          genres: ["Sci-Fi", "Adventure", "Mystery"],
+          overview:
+            "Deep sea researchers discover an ancient, hyper-advanced extraterrestrial structure nested within the Mariana Trench.",
+          cast: ["Sarah Jenkins", "Dr. Alistair Finch", "Leon Bridges"],
+          isOriginal: true,
+          trending: true,
+          top10: 3,
+        },
+        {
+          id: "m4",
+          title: "The Iron Sovereign",
+          type: "series",
+          backdrop:
+            "https://images.unsplash.com/photo-1533613220915-609f661a6fe1?w=1280&auto=format&fit=crop&q=80",
+          poster:
+            "https://images.unsplash.com/photo-1533613220915-609f661a6fe1?w=600&auto=format&fit=crop&q=80",
+          match: 94,
+          rating: "TV-MA",
+          duration: "3 Seasons",
+          genres: ["Action", "Drama", "Fantasy"],
+          overview:
+            "A fractured continent plunges into war when rival houses clash over an ancient iron throne carved from fallen meteors.",
+          cast: ["Lord Brandon", "Aria Starkwood", "Vane Vael"],
+          isOriginal: false,
+          trending: true,
+          top10: 4,
+        },
+        {
+          id: "m5",
+          title: "Retrograde",
+          type: "movie",
+          backdrop:
+            "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1280&auto=format&fit=crop&q=80",
+          poster:
+            "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=80",
+          match: 92,
+          rating: "PG-13",
+          duration: "2h 19m",
+          genres: ["Sci-Fi", "Thriller"],
+          overview:
+            "Astronauts aboard an orbital gravitational station encounter a spacetime rupture sending them backward through alternate timelines.",
+          cast: ["Claire Sterling", "Noah Scott", "Dr. H. Chen"],
+          isOriginal: true,
+          trending: true,
+          top10: 5,
+        },
+        {
+          id: "m6",
+          title: "Shadows of Venice",
+          type: "movie",
+          backdrop:
+            "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=1280&auto=format&fit=crop&q=80",
+          poster:
+            "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=600&auto=format&fit=crop&q=80",
+          match: 91,
+          rating: "R",
+          duration: "1h 48m",
+          genres: ["Action", "Crime", "Mystery"],
+          overview:
+            "An infamous art thief comes out of hiding for one final heist during the masked carnival of Venice, pursued by Interpol and former allies.",
+          cast: ["Gianni Bellini", "Sophie Laurent", "Klaus Meyer"],
+          isOriginal: false,
+          trending: true,
+          top10: 6,
+        },
+        {
+          id: "m7",
+          title: "Solaris Reborn",
+          type: "series",
+          backdrop:
+            "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1280&auto=format&fit=crop&q=80",
+          poster:
+            "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=600&auto=format&fit=crop&q=80",
+          match: 98,
+          rating: "TV-14",
+          duration: "1 Season",
+          genres: ["Sci-Fi", "Drama"],
+          overview:
+            "Earth establishes its first Dyson sphere colony around a dying star, only to discover something sentient living within the solar plasma.",
+          cast: ["Dr. Evelyn Gray", "Cpt. Vance Cooper", "Tariq Mansour"],
+          isOriginal: true,
+          trending: false,
+          top10: 7,
+        },
+        {
+          id: "m8",
+          title: "Midnight Courier",
+          type: "series",
+          backdrop:
+            "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1280&auto=format&fit=crop&q=80",
+          poster:
+            "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80",
+          match: 93,
+          rating: "TV-MA",
+          duration: "2 Seasons",
+          genres: ["Action", "Thriller"],
+          overview:
+            "A nocturnal motorcycle messenger accepts deliveries with zero questions asked, until one package begins whispering back.",
+          cast: ["Damon Ray", "Chloe Zhang", "Hector Morales"],
+          isOriginal: true,
+          trending: true,
+          top10: 8,
+        },
+        {
+          id: "m9",
+          title: "The Alchemist's Daughter",
+          type: "movie",
+          backdrop:
+            "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=80",
+          poster:
+            "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80",
+          match: 89,
+          rating: "PG-13",
+          duration: "2h 11m",
+          genres: ["Fantasy", "Adventure"],
+          overview:
+            "In 17th century Prague, a brilliant young woman uncovers her father's formula to transmute lead into energy, igniting a war with the royal inquisitors.",
+          cast: ["Mira Novak", "Gabriel Cross", "Balthazar Kane"],
+          isOriginal: false,
+          trending: false,
+          top10: 9,
+        },
+        {
+          id: "m10",
+          title: "Glitch Hunter",
+          type: "movie",
+          backdrop:
+            "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1280&auto=format&fit=crop&q=80",
+          poster:
+            "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&auto=format&fit=crop&q=80",
+          match: 96,
+          rating: "TV-MA",
+          duration: "1h 42m",
+          genres: ["Sci-Fi", "Action"],
+          overview:
+            "A software debugger discovers anomalous entities breaking through from a virtual simulation into physical reality.",
+          cast: ["Kyle Anderson", "Zoe Saldar", "Vincent Price"],
+          isOriginal: true,
+          trending: true,
+          top10: 10,
+        },
+        {
+          id: "m11",
+          title: "The Silent Forest",
+          type: "movie",
+          backdrop:
+            "https://images.unsplash.com/photo-1448375240586-882707db888b?w=1280&auto=format&fit=crop&q=80",
+          poster:
+            "https://images.unsplash.com/photo-1448375240586-882707db888b?w=600&auto=format&fit=crop&q=80",
+          match: 88,
+          rating: "PG-13",
+          duration: "1h 58m",
+          genres: ["Mystery", "Thriller"],
+          overview:
+            "A park ranger in the Pacific Northwest investigates mysterious disappearances inside a dense redwood canopy that emits zero sound.",
+          cast: ["Hannah Woods", "Lucas Bennett"],
+          isOriginal: false,
+          trending: false,
+        },
+        {
+          id: "m12",
+          title: "Valkyrie Protocol",
+          type: "series",
+          backdrop:
+            "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=1280&auto=format&fit=crop&q=80",
+          poster:
+            "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=600&auto=format&fit=crop&q=80",
+          match: 97,
+          rating: "TV-MA",
+          duration: "4 Seasons",
+          genres: ["Action", "Sci-Fi"],
+          overview:
+            "An elite mechanized task force defends humanity against an extraterrestrial swarm consuming orbital stations.",
+          cast: ["Freja Lind", "Cpt. Gunnar", "Thora Stone"],
+          isOriginal: true,
+          trending: true,
+        },
+      ];
+
+      /* ========================================================
+       APPLICATION STATE
+    ======================================================== */
+      let myWatchlist = JSON.parse(
+        localStorage.getItem("metflix_watchlist") || '["m1", "m3"]',
+      );
+      let activeModalMovie = null;
+      let isHeroMuted = true;
+      let isModalMuted = true;
+
+      /* ========================================================
+       INITIALIZATION
+    ======================================================== */
+      window.addEventListener("DOMContentLoaded", () => {
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Render standard shelves
+        renderTrendingShelf();
+        renderTop10Shelf();
+        renderOriginalsShelf();
+        renderActionShelf();
+        renderSciFiShelf();
+        renderMyListShelf();
+
+        // Setup sticky navbar scroll listener
+        setupNavbarScroll();
+
+        // Setup Search Listeners
+        setupSearch();
+
+        // Setup Notification Toggle
+        setupNotifications();
+
+        // Update badge count
+        updateWatchlistBadge();
+      });
+
+      /* ========================================================
+       RENDER SHELVES & CARDS
+    ======================================================== */
+      function renderTrendingShelf() {
+        const container = document.getElementById("trending-carousel");
+        const trending = MOVIES_DATABASE.filter((m) => m.trending);
+        container.innerHTML = trending
+          .map((movie) => createStandardCard(movie))
+          .join("");
+      }
+
+      function renderTop10Shelf() {
+        const container = document.getElementById("top10-carousel");
+        const top10 = MOVIES_DATABASE.filter((m) => m.top10).sort(
+          (a, b) => a.top10 - b.top10,
+        );
+        container.innerHTML = top10
+          .map((movie) => createTop10Card(movie))
+          .join("");
+      }
+
+      function renderOriginalsShelf() {
+        const container = document.getElementById("originals-carousel");
+        const originals = MOVIES_DATABASE.filter((m) => m.isOriginal);
+        container.innerHTML = originals
+          .map((movie) => createTallOriginalCard(movie))
+          .join("");
+      }
+
+      function renderActionShelf() {
+        const container = document.getElementById("action-carousel");
+        const action = MOVIES_DATABASE.filter((m) =>
+          m.genres.includes("Action"),
+        );
+        container.innerHTML = action
+          .map((movie) => createStandardCard(movie))
+          .join("");
+      }
+
+      function renderSciFiShelf() {
+        const container = document.getElementById("scifi-carousel");
+        const scifi = MOVIES_DATABASE.filter((m) =>
+          m.genres.includes("Sci-Fi"),
+        );
+        container.innerHTML = scifi
+          .map((movie) => createStandardCard(movie))
+          .join("");
+      }
+
+      function renderMyListShelf() {
+        const container = document.getElementById("list-carousel");
+        const row = document.getElementById("row-my-list");
+        const savedMovies = MOVIES_DATABASE.filter((m) =>
+          myWatchlist.includes(m.id),
+        );
+
+        if (savedMovies.length === 0) {
+          row.classList.add("hidden");
+          return;
+        }
+
+        row.classList.remove("hidden");
+        container.innerHTML = savedMovies
+          .map((movie) => createStandardCard(movie))
+          .join("");
+        lucide.createIcons();
+      }
+
+      /* ========================================================
+       CARD HTML TEMPLATES
+    ======================================================== */
+      // Standard Landscape Card with Hover Expansion
+      function createStandardCard(m) {
+        const inList = myWatchlist.includes(m.id);
+        return `
+        <div class="relative flex-none w-48 sm:w-64 group/card cursor-pointer rounded-md overflow-visible py-2" onclick="openDetails('${m.id}')">
+          <!-- Normal Card -->
+          <div class="relative aspect-video rounded-md overflow-hidden bg-zinc-900 border border-zinc-800 transition-all duration-300 group-hover/card:scale-105 group-hover/card:shadow-xl group-hover/card:shadow-black/70">
+            <img src="${m.backdrop}" alt="${m.title}" class="w-full h-full object-cover" loading="lazy" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover/card:opacity-30 transition"></div>
+            
+            ${m.isOriginal ? '<span class="absolute top-1.5 left-1.5 bg-brand-red text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase tracking-wider">Metflix</span>' : ""}
+            
+            <div class="absolute bottom-2 left-2 right-2">
+              <h4 class="text-xs sm:text-sm font-bold text-white drop-shadow truncate">${m.title}</h4>
+            </div>
+          </div>
+
+          <!-- Hover Popover Details (Desktop Enhancement) -->
+          <div class="hidden lg:group-hover/card:block absolute -top-8 left-1/2 -translate-x-1/2 w-72 bg-[#181818] rounded-lg shadow-2xl z-40 p-3 border border-zinc-700 pointer-events-auto transition-all duration-200">
+            <div class="relative aspect-video rounded overflow-hidden mb-2">
+              <img src="${m.backdrop}" class="w-full h-full object-cover">
+              <div class="absolute inset-0 bg-black/20 flex items-center justify-center">
+                <div class="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shadow-lg hover:scale-110 transition">
+                  <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+                </div>
+              </div>
+            </div>
+            
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <button onclick="event.stopPropagation(); playTrailerDirect('${m.id}')" class="w-7 h-7 rounded-full bg-white text-black flex items-center justify-center hover:bg-white/80">
+                    <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                  </button>
+                  <button onclick="event.stopPropagation(); toggleWatchlist('${m.id}')" class="w-7 h-7 rounded-full border border-gray-400 flex items-center justify-center text-white hover:border-white">
+                    <i data-lucide="${inList ? "check" : "plus"}" class="w-3.5 h-3.5"></i>
+                  </button>
+                  <button onclick="event.stopPropagation(); showToast('Liked: ${m.title}')" class="w-7 h-7 rounded-full border border-gray-400 flex items-center justify-center text-white hover:border-white">
+                    <i data-lucide="thumbs-up" class="w-3.5 h-3.5"></i>
+                  </button>
+                </div>
+                <button onclick="event.stopPropagation(); openDetails('${m.id}')" class="w-7 h-7 rounded-full border border-gray-400 flex items-center justify-center text-white hover:border-white">
+                  <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                </button>
+              </div>
+
+              <div class="flex items-center space-x-2 text-[11px] pt-1">
+                <span class="text-green-400 font-bold">${m.match}% Match</span>
+                <span class="border border-zinc-600 px-1 text-[9px] text-gray-300">${m.rating}</span>
+                <span class="text-gray-400">${m.duration}</span>
+              </div>
+
+              <div class="flex flex-wrap gap-1 text-[10px] text-gray-300">
+                ${m.genres.map((g) => `<span class="after:content-['•'] after:ml-1 after:text-gray-600 last:after:content-none">${g}</span>`).join("")}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      }
+
+      // Top 10 Numbered Card
+      function createTop10Card(m) {
+        return `
+        <div class="relative flex-none flex items-end w-44 sm:w-56 group/top10 cursor-pointer py-2" onclick="openDetails('${m.id}')">
+          <!-- Giant Impact Number -->
+          <div class="text-7xl sm:text-9xl font-black stroke-number leading-none -mr-4 sm:-mr-6 z-10 select-none">
+            ${m.top10}
+          </div>
+          <!-- Card Thumbnail -->
+          <div class="relative w-32 sm:w-40 aspect-[2/3] rounded-md overflow-hidden bg-zinc-900 border border-zinc-800 transition-transform duration-300 group-hover/top10:scale-105 group-hover/top10:shadow-xl group-hover/top10:shadow-black/70">
+            <img src="${m.poster}" alt="${m.title}" class="w-full h-full object-cover" loading="lazy" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent"></div>
+            <div class="absolute bottom-2 left-2 right-2">
+              <span class="text-[9px] font-bold text-brand-red uppercase tracking-wide">Top 10</span>
+              <h4 class="text-xs font-bold text-white truncate">${m.title}</h4>
+            </div>
+          </div>
+        </div>
+      `;
+      }
+
+      // Metflix Originals Tall Card
+      function createTallOriginalCard(m) {
+        return `
+        <div class="relative flex-none w-36 sm:w-48 aspect-[2/3.1] group/tall cursor-pointer rounded-md overflow-hidden bg-zinc-900 border border-zinc-800 transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-brand-red/10 py-1" onclick="openDetails('${m.id}')">
+          <img src="${m.poster}" alt="${m.title}" class="w-full h-full object-cover" loading="lazy" />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+          
+          <div class="absolute top-2 left-2 flex items-center space-x-1">
+            <span class="text-brand-red font-black text-lg font-display">M</span>
+          </div>
+
+          <div class="absolute bottom-3 left-2.5 right-2.5">
+            <span class="text-[10px] text-green-400 font-bold">${m.match}% Match</span>
+            <h4 class="text-xs sm:text-sm font-extrabold text-white leading-tight mt-0.5 line-clamp-2">${m.title}</h4>
+            <div class="flex items-center gap-1.5 mt-1 text-[10px] text-gray-400">
+              <span>${m.duration}</span>
+              <span>•</span>
+              <span class="text-gray-300">${m.genres[0]}</span>
+            </div>
+          </div>
+        </div>
+      `;
+      }
+
+      /* ========================================================
+       SEARCH & FILTERING SYSTEM
+    ======================================================== */
+      function setupSearch() {
+        const searchToggleBtn = document.getElementById("search-toggle-btn");
+        const searchBox = document.getElementById("search-box");
+        const searchInput = document.getElementById("search-input");
+        const searchClearBtn = document.getElementById("search-clear-btn");
+
+        searchToggleBtn.addEventListener("click", () => {
+          searchBox.classList.toggle("hidden");
+          searchBox.classList.toggle("flex");
+          if (!searchBox.classList.contains("hidden")) {
+            searchInput.focus();
+          }
+        });
+
+        searchInput.addEventListener("input", (e) => {
+          const query = e.target.value.trim().toLowerCase();
+          if (query.length > 0) {
+            searchClearBtn.classList.remove("hidden");
+            executeSearch(query);
+          } else {
+            searchClearBtn.classList.add("hidden");
+            resetSearch();
+          }
+        });
+
+        searchClearBtn.addEventListener("click", () => {
+          searchInput.value = "";
+          searchClearBtn.classList.add("hidden");
+          resetSearch();
+          searchInput.focus();
+        });
+      }
+
+      function executeSearch(query) {
+        const resultsSection = document.getElementById(
+          "search-results-section",
+        );
+        const heroBillboard = document.getElementById("hero-billboard");
+        const contentShelves = document.getElementById("content-shelves");
+        const searchGrid = document.getElementById("search-grid");
+        const countBadge = document.getElementById("search-count-badge");
+        const heading = document.getElementById("search-heading");
+
+        const matches = MOVIES_DATABASE.filter(
+          (m) =>
+            m.title.toLowerCase().includes(query) ||
+            m.genres.some((g) => g.toLowerCase().includes(query)) ||
+            m.cast.some((c) => c.toLowerCase().includes(query)),
+        );
+
+        // Hide hero and normal shelves
+        heroBillboard.classList.add("hidden");
+        contentShelves.classList.add("hidden");
+        resultsSection.classList.remove("hidden");
+
+        heading.innerText = `Search for "${query}"`;
+        countBadge.innerText = `${matches.length} found`;
+
+        if (matches.length === 0) {
+          searchGrid.innerHTML = `
+          <div class="col-span-full py-16 text-center text-gray-400 space-y-3">
+            <i data-lucide="film" class="w-12 h-12 mx-auto stroke-zinc-600"></i>
+            <p class="text-base font-semibold text-white">No titles found for "${query}"</p>
+            <p class="text-xs text-gray-500">Suggestions: Try searching for "Action", "Cyberpunk", or "Elena Rostova"</p>
+          </div>
+        `;
+        } else {
+          searchGrid.innerHTML = matches
+            .map((m) => createStandardCard(m))
+            .join("");
+        }
+
+        lucide.createIcons();
+      }
+
+      function resetSearch() {
+        document
+          .getElementById("search-results-section")
+          .classList.add("hidden");
+        document.getElementById("hero-billboard").classList.remove("hidden");
+        document.getElementById("content-shelves").classList.remove("hidden");
+        document.getElementById("search-input").value = "";
+        document.getElementById("search-clear-btn").classList.add("hidden");
+      }
+
+      function filterByCategory(type) {
+        resetSearch();
+        // Update nav link styles
+        document.querySelectorAll(".nav-link").forEach((link) => {
+          link.classList.remove("text-white", "font-semibold");
+          link.classList.add("text-gray-300");
+        });
+
+        if (type === "all") {
+          document
+            .getElementById("nav-home")
+            .classList.add("text-white", "font-semibold");
+          renderTrendingShelf();
+          renderTop10Shelf();
+          renderOriginalsShelf();
+          renderActionShelf();
+          renderSciFiShelf();
+          showToast("Browsing All Home Titles");
+        } else if (type === "series") {
+          document
+            .getElementById("nav-series")
+            .classList.add("text-white", "font-semibold");
+          const seriesOnly = MOVIES_DATABASE.filter((m) => m.type === "series");
+          showCategoryResults("TV Shows", seriesOnly);
+        } else if (type === "movie") {
+          document
+            .getElementById("nav-movie")
+            .classList.add("text-white", "font-semibold");
+          const moviesOnly = MOVIES_DATABASE.filter((m) => m.type === "movie");
+          showCategoryResults("Feature Films", moviesOnly);
+        } else if (type === "trending") {
+          document
+            .getElementById("nav-trending")
+            .classList.add("text-white", "font-semibold");
+          const trendingOnly = MOVIES_DATABASE.filter((m) => m.trending);
+          showCategoryResults("New & Popular Releases", trendingOnly);
+        }
+      }
+
+      function showCategoryResults(title, list) {
+        const resultsSection = document.getElementById(
+          "search-results-section",
+        );
+        const heroBillboard = document.getElementById("hero-billboard");
+        const contentShelves = document.getElementById("content-shelves");
+        const searchGrid = document.getElementById("search-grid");
+        const countBadge = document.getElementById("search-count-badge");
+        const heading = document.getElementById("search-heading");
+
+        heroBillboard.classList.add("hidden");
+        contentShelves.classList.add("hidden");
+        resultsSection.classList.remove("hidden");
+
+        heading.innerText = title;
+        countBadge.innerText = `${list.length} titles`;
+        searchGrid.innerHTML = list.map((m) => createStandardCard(m)).join("");
+        lucide.createIcons();
+      }
+
+      function showMyListView() {
+        resetSearch();
+        document
+          .querySelectorAll(".nav-link")
+          .forEach((link) =>
+            link.classList.remove("text-white", "font-semibold"),
+          );
+        document
+          .getElementById("nav-mylist")
+          .classList.add("text-white", "font-semibold");
+
+        const savedMovies = MOVIES_DATABASE.filter((m) =>
+          myWatchlist.includes(m.id),
+        );
+        showCategoryResults("My Personal Watchlist", savedMovies);
+      }
+
+      /* ========================================================
+       MODAL POPUP & TRAILER SIMULATOR
+    ======================================================== */
+      function openDetails(movieId) {
+        const movie = MOVIES_DATABASE.find((m) => m.id === movieId);
+        if (!movie) return;
+
+        activeModalMovie = movie;
+
+        // Populate Modal Fields
+        document.getElementById("modal-title").innerText = movie.title;
+        document.getElementById("modal-backdrop-img").src = movie.backdrop;
+        document.getElementById("modal-match").innerText =
+          `${movie.match}% Match`;
+        document.getElementById("modal-rating").innerText = movie.rating;
+        document.getElementById("modal-duration").innerText = movie.duration;
+        document.getElementById("modal-overview").innerText = movie.overview;
+        document.getElementById("modal-cast").innerText = movie.cast.join(", ");
+        document.getElementById("modal-genres").innerText =
+          movie.genres.join(", ");
+
+        // Update Watchlist Button state in modal
+        updateModalWatchlistState();
+
+        // Populate More Like This Grid
+        const similar = MOVIES_DATABASE.filter(
+          (m) =>
+            m.id !== movie.id && m.genres.some((g) => movie.genres.includes(g)),
+        ).slice(0, 3);
+
+        const similarGrid = document.getElementById("modal-similar-grid");
+        similarGrid.innerHTML = similar
+          .map(
+            (sim) => `
+        <div class="bg-zinc-900 rounded overflow-hidden border border-zinc-800 cursor-pointer hover:border-zinc-500 transition" onclick="openDetails('${sim.id}')">
+          <div class="relative aspect-video">
+            <img src="${sim.backdrop}" class="w-full h-full object-cover">
+            <span class="absolute top-1.5 right-1.5 bg-black/70 text-[10px] px-1.5 rounded">${sim.duration}</span>
+          </div>
+          <div class="p-2 space-y-1">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-green-400 font-bold">${sim.match}% Match</span>
+              <span class="border border-zinc-700 px-1 text-[9px] text-gray-400">${sim.rating}</span>
+            </div>
+            <p class="font-bold text-xs text-white truncate">${sim.title}</p>
+            <p class="text-[10px] text-gray-400 line-clamp-2">${sim.overview}</p>
+          </div>
+        </div>
+      `,
+          )
+          .join("");
+
+        // Show Modal
+        const modal = document.getElementById("modal-container");
+        const content = document.getElementById("modal-content");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        document.body.classList.add("overflow-hidden");
+
+        setTimeout(() => {
+          content.classList.remove("scale-95", "opacity-0");
+          content.classList.add("scale-100", "opacity-100");
+        }, 10);
+
+        lucide.createIcons();
+      }
+
+      function closeModal() {
+        const modal = document.getElementById("modal-container");
+        const content = document.getElementById("modal-content");
+
+        content.classList.remove("scale-100", "opacity-100");
+        content.classList.add("scale-95", "opacity-0");
+
+        setTimeout(() => {
+          modal.classList.add("hidden");
+          modal.classList.remove("flex");
+          document.body.classList.remove("overflow-hidden");
+        }, 200);
+      }
+
+      function simulatePlayTrailer() {
+        const btnText = document.getElementById("modal-play-btn-text");
+        btnText.innerText = "Simulating Video Stream...";
+        showToast(
+          `Streaming trailer: ${activeModalMovie ? activeModalMovie.title : "Movie"}`,
+        );
+        setTimeout(() => {
+          btnText.innerText = "Playing in 4K HDR";
+        }, 1500);
+      }
+
+      function playTrailerDirect(movieId) {
+        const m = MOVIES_DATABASE.find((item) => item.id === movieId);
+        if (m) {
+          showToast(`Playing '${m.title}' instant preview`);
+        }
+      }
+
+      function playHeroTrailer() {
+        showToast("Launching Metflix Fullscreen Player: Cyber Odyssey 2099");
+      }
+
+      function openHeroDetails() {
+        openDetails("m1");
+      }
+
+      /* ========================================================
+       WATCHLIST MANAGEMENT (LOCAL STORAGE)
+    ======================================================== */
+      function toggleWatchlist(movieId) {
+        const index = myWatchlist.indexOf(movieId);
+        const movie = MOVIES_DATABASE.find((m) => m.id === movieId);
+        const title = movie ? movie.title : "Title";
+
+        if (index === -1) {
+          myWatchlist.push(movieId);
+          showToast(`Added '${title}' to My Watchlist`);
+        } else {
+          myWatchlist.splice(index, 1);
+          showToast(`Removed '${title}' from My Watchlist`);
+        }
+
+        localStorage.setItem("metflix_watchlist", JSON.stringify(myWatchlist));
+
+        // Update UI components
+        updateWatchlistBadge();
+        renderMyListShelf();
+        updateModalWatchlistState();
+        lucide.createIcons();
+      }
+
+      function updateModalWatchlistState() {
+        if (!activeModalMovie) return;
+        const inList = myWatchlist.includes(activeModalMovie.id);
+        const btn = document.getElementById("modal-list-toggle-btn");
+        btn.onclick = () => toggleWatchlist(activeModalMovie.id);
+        btn.innerHTML = `<i data-lucide="${inList ? "check" : "plus"}" class="w-5 h-5 ${inList ? "text-green-400" : "text-white"}"></i>`;
+        lucide.createIcons();
+      }
+
+      function updateWatchlistBadge() {
+        const badge = document.getElementById("nav-list-badge");
+        if (myWatchlist.length > 0) {
+          badge.innerText = myWatchlist.length;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+        }
+      }
+
+      /* ========================================================
+       ROW CAROUSEL SCROLLER
+    ======================================================== */
+      function scrollRow(carouselId, direction) {
+        const carousel = document.getElementById(carouselId);
+        if (!carousel) return;
+        const scrollAmount = carousel.clientWidth * 0.75 * direction;
+        carousel.scrollBy({ left: scrollAmount, behavior: "smooth" });
+      }
+
+      /* ========================================================
+       STICKY NAVBAR & INTERACTIVE UTILITIES
+    ======================================================== */
+      function setupNavbarScroll() {
+        const navbar = document.getElementById("navbar");
+        window.addEventListener("scroll", () => {
+          if (window.scrollY > 40) {
+            navbar.classList.add(
+              "bg-[#141414]",
+              "shadow-xl",
+              "backdrop-blur-md",
+            );
+            navbar.classList.remove("bg-gradient-to-b");
+          } else {
+            navbar.classList.remove(
+              "bg-[#141414]",
+              "shadow-xl",
+              "backdrop-blur-md",
+            );
+            navbar.classList.add("bg-gradient-to-b");
+          }
+        });
+      }
+
+      function setupNotifications() {
+        const btn = document.getElementById("notif-btn");
+        const dropdown = document.getElementById("notif-dropdown");
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          dropdown.classList.toggle("hidden");
+        });
+        document.addEventListener("click", () => {
+          if (!dropdown.classList.contains("hidden")) {
+            dropdown.classList.add("hidden");
+          }
+        });
+      }
+
+      function toggleHeroAudio() {
+        isHeroMuted = !isHeroMuted;
+        const icon = document.getElementById("hero-audio-icon");
+        if (isHeroMuted) {
+          icon.setAttribute("data-lucide", "volume-x");
+          showToast("Hero Billboard Sound: Muted");
+        } else {
+          icon.setAttribute("data-lucide", "volume-2");
+          showToast("Hero Billboard Sound: Audio Active");
+        }
+        lucide.createIcons();
+      }
+
+      function toggleModalMute() {
+        isModalMuted = !isModalMuted;
+        const icon = document.getElementById("modal-mute-icon");
+        if (isModalMuted) {
+          icon.setAttribute("data-lucide", "volume-x");
+        } else {
+          icon.setAttribute("data-lucide", "volume-2");
+        }
+        lucide.createIcons();
+      }
+
+      function toggleModalLike() {
+        const btn = document.getElementById("modal-like-btn");
+        btn.classList.toggle("bg-brand-red");
+        btn.classList.toggle("border-brand-red");
+        showToast("Added to your Liked titles!");
+      }
+
+      /* ========================================================
+       TOAST SYSTEM
+    ======================================================== */
+      let toastTimeout;
+      function showToast(msg) {
+        const toast = document.getElementById("toast");
+        const text = document.getElementById("toast-message");
+        text.innerText = msg;
+
+        toast.classList.remove(
+          "translate-y-20",
+          "opacity-0",
+          "pointer-events-none",
+        );
+        toast.classList.add("translate-y-0", "opacity-100");
+
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+          toast.classList.remove("translate-y-0", "opacity-100");
+          toast.classList.add(
+            "translate-y-20",
+            "opacity-0",
+            "pointer-events-none",
+          );
+        }, 3200);
+      }
+    </script>
+  </body>
+</html>
